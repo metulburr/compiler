@@ -4,7 +4,6 @@
 #include <string>
 #include <algorithm>
 
-
 class String{
     public:
         std::string str;
@@ -125,6 +124,20 @@ class String{
 
 
 
+std::string 
+splice(std::string s, int front=0, int back=0){
+    std::string s2 = s.substr(front);
+    std::string s3 = std::string(s2.rbegin(), s2.rend()).substr(back);
+    return std::string(s3.rbegin(), s3.rend());
+}
+
+bool 
+startswith(std::string str, std::string search){
+    if ( str.compare(0, search.length(), search) == 0)
+        return true;
+    else
+        return false;
+}
 
 std::string 
 cha2str(char ch){
@@ -147,46 +160,78 @@ is_op(char c){
 }
 
 std::string
-translate(char c){
+translate(char c, bool type_only=false){
     if (isdigit(c))
-        return "DIGIT" + cha2str(c);
+        if (type_only)
+            return "DIGIT";
+        else
+            return "DIGIT" + cha2str(c);
     else if (c == '.')
         return "PERIOD";
     else if (is_op(c))
-        return "OP" + cha2str(c);
+        if (type_only)
+            return "OP";
+        else
+            return "OP" + cha2str(c);
     else if (c == '=')
         return "ASSIGN";
+    else if (c == '!')
+        return "EXCLAM";
     else if (isalpha(c) || c == '_')
-        return "CHAR" + cha2str(c);
+        if (type_only)
+            return "CHAR";
+        else
+            return "CHAR" + cha2str(c);
     else if (c == '(')
-        return "OPENPAREN";
+        return "POPEN";
     else if (c == ')')
-        return "CLOSEPAREN";
+        return "PCLOSE";
     else if (c == '{')
-        return "OPENBRACKET";
+        return "BOPEN";
     else if (c == '}')
-        return "CLOSEBRACKET";
+        return "BCLOSE";
+    else if (isspace(c))
+        return "SPACE";
     else
-        return "NONE";
+        return "OTHER";
 }
+
+
 
 int main(){
     const char *input =
-        "var_var = (1.1+7)*3/44\n";
+        "var_var = 1+7*31/1001\n";
     
     String filer(input);
-    std::vector<std::string> lines = filer.split(), translated_line;
+    std::vector<std::string> lines = filer.split(), translated_line, tokens;
     std::vector< std::vector<std::string> > file;
 
     unsigned int line_number = 1;
     for (auto line:lines){
+        int index = 0;
+        std::string token_str;
         for (auto ch:line){
-            //std::cout << "LINE: " << line_number << std::endl;
-            std::string def = translate(ch);
-            std::cout << def << std::endl;
-            translated_line.push_back(def);
+            std::cout << translate(ch) << std::endl;
+            
+            if (translate(ch, true) == translate(line[index-1], true)){
+                //char is following previously same type
+                token_str += ch;
+                if (index+1 == line.length())
+                    //push str to tokens on last char of line
+                    tokens.push_back(token_str);
+            }
+            else{
+                //char is starting a new type
+                tokens.push_back(token_str);
+                token_str = ch;
+            }
+            index++;
         }
-        file.push_back(translated_line);
+        file.push_back(tokens);
         line_number++;
     }
+    
+    //print test
+    for (auto i:file[0])
+        std::cout << i << std::endl;
 }
