@@ -200,23 +200,30 @@ translate(char c, bool type_only=false){
 
 int main(){
     const char *input =
-        "var_var = 1+7*31/1001\n";
+        "var_var = 1.1+7*31/1001.123+123-2345.1+.33\n";
     
     String filer(input);
     std::vector<std::string> lines = filer.split(), translated_line, tokens;
     std::vector< std::vector<std::string> > file;
 
-    unsigned int line_number = 1;
+    int line_number = 1;
     for (auto line:lines){
         int index = 0;
+        int len = line.length();
         std::string token_str;
+        
         for (auto ch:line){
             std::cout << translate(ch) << std::endl;
             
-            if (translate(ch, true) == translate(line[index-1], true)){
+            std::string last_type = translate(line[index-1], true);
+            std::string current_type = translate(ch, true);
+            
+            //if same type as last char looped //if PERIOD and DIGIT or DIGIT and PERIOD
+            if (current_type == last_type || 
+            (current_type == "PERIOD" && last_type == "DIGIT") || (current_type == "DIGIT" && last_type == "PERIOD")) {
                 //char is following previously same type
                 token_str += ch;
-                if (index+1 == line.length())
+                if (index+1 == len)
                     //push str to tokens on last char of line
                     tokens.push_back(token_str);
             }
