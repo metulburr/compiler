@@ -193,14 +193,24 @@ translate(char c, bool type_only=false){
     else if (isspace(c))
         return "SPACE";
     else
-        return "OTHER";
+        return "ERROR";
+}
+
+std::string error_space(int len){
+    std::string s;
+    for (int i=0; i<len; i++){
+        s += " ";
+    }
+    return s;
 }
 
 
 
 int main(){
     const char *input =
-        "var_var = 1.1+7*31/1001.123+123-2345.1+.33\n";
+        "var_var = 123456 + 5.5*4.5 / 4456\n"
+        "myvar = 1 + 1\n"
+        "myvar_two = 1 + 2+3";
     
     String filer(input);
     std::vector<std::string> lines = filer.split(), translated_line, tokens;
@@ -213,13 +223,26 @@ int main(){
         std::string token_str;
         
         for (auto ch:line){
-            std::cout << translate(ch) << std::endl;
+            //std::cout << translate(ch) << std::endl;
             
             std::string last_type = translate(line[index-1], true);
             std::string current_type = translate(ch, true);
             
+            //if (current_type == "SPACE")
+            //    continue;
+            
+            //if both current and last are types
+            if (current_type == "ERROR" ||
+            (current_type == "OP" && last_type == "OP") ){
+                std::cout << "Unexpected identifier '" << ch << "' on line " << line_number << ", position " << index << std::endl;
+                std::cout << line << std::endl;
+                std::cout << error_space(index) << "^" << std::endl;
+                //raise error
+                break;
+            }
+            
             //if same type as last char looped //if PERIOD and DIGIT or DIGIT and PERIOD
-            if (current_type == last_type || 
+            else if (current_type == last_type || 
             (current_type == "PERIOD" && last_type == "DIGIT") || (current_type == "DIGIT" && last_type == "PERIOD")) {
                 //char is following previously same type
                 token_str += ch;
@@ -231,14 +254,22 @@ int main(){
                 //char is starting a new type
                 tokens.push_back(token_str);
                 token_str = ch;
+                if (index+1 == len)
+                    //push str to tokens on last char of line
+                    tokens.push_back(token_str);
             }
             index++;
         }
         file.push_back(tokens);
+        tokens.clear();
         line_number++;
     }
     
     //print test
-    for (auto i:file[0])
-        std::cout << i << std::endl;
+    for (auto line:file){
+        for (auto token:line){
+            std::cout << token << std::endl;
+        }
+    }
+
 }
